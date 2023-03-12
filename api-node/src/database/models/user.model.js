@@ -6,6 +6,18 @@ export const User = db.define('users', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  pass: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
 }, { 
   timestamps: false
 })
+
+User.associate = function(models) {
+  User.hasMany(models.Notification, { foreignKey: 'user_id' })
+}

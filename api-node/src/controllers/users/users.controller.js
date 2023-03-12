@@ -1,7 +1,13 @@
-import { randomUUID } from 'node:crypto'
-import { User } from '../../database/models/user.model.js'
-import { createUserRepository, findUserById, updateUserRepository } from '../../repositories/users/users.repository.js'
+import formatUserResponse from '../../core/utils/format-user-response.js';
+import { 
+  createUserRepository, 
+  findAllUsersRepository, 
+  findUserByEmail, 
+  findUserById, 
+  updateUserRepository 
+} from '../../repositories/users/users.repository.js'
 
+import jwt from 'jsonwebtoken';
 
 export const findOneUserById = async (req, res) => {
   const { id } = req.params
@@ -17,15 +23,21 @@ export const findOneUserById = async (req, res) => {
 
 
 export const findAllUsers = async (req, res) => {
-  const users = await findAllUsers()
+  const { email } = req.user;
 
-  return res.status(200).json({ users });
+  const users = await findAllUsersRepository(email)
+
+  const formatUsers = users.map(user => {
+    return formatUserResponse(user);
+  })
+
+  return res.status(200).json(formatUsers);
 }
 
 export const createUser = async (req, res) => {
-  const { name } = req.body
+  const { name, password, email, } = req.body
 
-  const user = await createUserRepository(name)
+  const user = await createUserRepository(name, password, email)
 
   return res.status(201).json({ user });
 }
@@ -45,4 +57,21 @@ export const deleteUserById = async (req, res) => {
   await deleteUserById(id)
   
   return res.status(204).send()
+}
+
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  const { pass, name } = await findUserByEmail(email);
+
+
+  if (password === pass) {
+    const secret = 'secret'
+
+    const token = jwt.sign({ email, name }, secret, { expiresIn: '1h' });
+
+    return res.status(202).json({ token })
+  }
+
+  res.status(401).json({ message: 'Credenciais inválidas' })
 }

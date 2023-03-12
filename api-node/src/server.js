@@ -6,8 +6,8 @@ const app = express();
 const PORT = 3333;
 
 app.use(express.json())
-app.use(routes)
+// app.use(verifyFieldName)
 
-global.users = []
+app.use(routes)
 
 app.listen(PORT, () => console.log(`server running in localhost:${ PORT }`))
